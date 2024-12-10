@@ -1,5 +1,11 @@
 const express = require('express');
-const {createRestaurant} = require('../controllers/restaurentController');
+const { 
+    createRestaurant, 
+    getAllRestaurants, 
+    getRestaurantById, 
+    updateRestaurant, 
+    deleteRestaurant 
+} = require('../controllers/restaurentController');
 const { protect } = require('../middlewares/authMiddleware.js');
 
 const router = express.Router();
