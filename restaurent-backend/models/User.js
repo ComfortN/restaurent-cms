@@ -5,6 +5,17 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    contactNumber: { 
+        type: String, 
+        required: false,
+        validate: {
+            validator: function(v) {
+                // Optional regex for phone number validation (adjust as needed)
+                return v === null || v === '' || /^\+27\d{9}$/.test(v);
+            },
+            message: props => `${props.value} is not a valid phone number!`
+        }
+    },
     role: { 
         type: String, 
         enum: ['super_admin', 'restaurant_admin', 'user'], 
