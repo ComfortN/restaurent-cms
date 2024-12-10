@@ -4,6 +4,55 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 
+exports.register = async (req, res) => {
+    try {
+        const { name, email, password, contactNumber } = req.body;
+
+        // Validate input
+        if (!name || !email || !password) {
+            return res.status(400).json({ message: "Please provide name, email, and password" });
+        }
+
+        // Check if user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
+        }
+
+        // Create new user
+        const newUser = await User.create({
+            name,
+            email,
+            password,
+            contactNumber: contactNumber || null, // Optional contact number
+            role: 'user' // Default role for registration
+        });
+
+        // Generate token
+        const token = jwt.sign(
+            { id: newUser._id, role: newUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
+        );
+
+        // Remove password from response
+        const userResponse = newUser.toObject();
+        delete userResponse.password;
+
+        res.status(201).json({ 
+            message: "User registered successfully", 
+            user: userResponse,
+            token 
+        });
+    } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({ 
+            message: "Error registering user", 
+            error: error.message 
+        });
+    }
+};
+
 
 exports.createRestaurantAdmin = async (req, res) => {
     try {
@@ -102,3 +151,75 @@ exports.login = async (req, res) => {
     }
 };
 
+
+exports.getProfile = async (req, res) => {
+    try {
+        // Get the user ID from the authentication middleware
+        const userId = req.user.id;
+
+        // Find the user by ID, excluding the password
+        const user = await User.findById(userId)
+            .select('-password')
+            .populate('restaurantId', 'name'); // Optionally populate restaurant details if exists
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            message: "Profile retrieved successfully",
+            user: user
+        });
+    } catch (error) {
+        console.error("Get profile error:", error);
+        res.status(500).json({ 
+            message: "Error retrieving profile", 
+            error: error.message 
+        });
+    }
+};
+
+
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id; // From the authentication middleware
+        const { name, contactNumber } = req.body;
+
+        // Validate input
+        if (!name && !contactNumber) {
+            return res.status(400).json({ message: "Please provide at least one field to update" });
+        }
+
+        // Find and update the user
+        const updatedUser = await User.findByIdAndUpdate(
+            userId, 
+            { 
+                ...(name && { name }),
+                ...(contactNumber && { contactNumber }) 
+            }, 
+            { 
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Remove sensitive information
+        const userResponse = updatedUser.toObject();
+        delete userResponse.password;
+
+        res.status(200).json({ 
+            message: "Profile updated successfully", 
+            user: userResponse 
+        });
+    } catch (error) {
+        console.error("Profile update error:", error);
+        res.status(500).json({ 
+            message: "Error updating profile", 
+            error: error.message 
+        });
+    }
+};
