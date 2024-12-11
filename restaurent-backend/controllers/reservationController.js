@@ -262,4 +262,45 @@ exports.cancelUserReservation = async (req, res) => {
 };
 
 
+exports.getRestaurantReservations = async (req, res) => {
+    try {
+        const { restaurantId } = req.params;
 
+        // Check if the admin has access to the restaurant
+        if (req.user.role !== 'restaurant_admin') {
+            return res.status(403).json({ message: 'Access denied' });
+        }
+
+        const reservations = await Reservation.find({ restaurantId }).sort({ date: -1 });
+        res.status(200).json({ reservations });
+    } catch (error) {
+        console.error('Error fetching restaurant reservations:', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+
+exports.updateReservationStatus = async (req, res) => {
+    try {
+        const { reservationId } = req.params;
+        const { status } = req.body;
+
+        if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+            return res.status(400).json({ message: 'Invalid status value' });
+        }
+
+        const reservation = await Reservation.findById(reservationId);
+
+        if (!reservation) {
+            return res.status(404).json({ message: 'Reservation not found' });
+        }
+
+        reservation.status = status;
+
+        await reservation.save();
+        res.status(200).json({ message: 'Reservation status updated successfully', reservation });
+    } catch (error) {
+        console.error('Error updating reservation status:', error.message);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
