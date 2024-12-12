@@ -7,11 +7,11 @@ const reservationSchema = new mongoose.Schema(
             ref: 'Restaurant',
             required: true,
         },
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-        },
+        // userId: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: 'User',
+        //     required: true,
+        // },
         date: {
             type: Date,
             required: true,
@@ -46,6 +46,14 @@ const reservationSchema = new mongoose.Schema(
             type: Boolean,
             default: false, // Tracks whether the user cancelled the reservation
         },
+        paymentStatus: {
+            type: String,
+            enum: ['pending', 'paid', 'failed', 'refunded'],
+            default: 'pending'
+        },
+        paymentIntentId: {
+            type: String
+        }
     },
     { timestamps: true }
 );
