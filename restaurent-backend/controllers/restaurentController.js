@@ -63,12 +63,19 @@ exports.createRestaurant = async (req, res) => {
 
 exports.getAllRestaurants = async (req, res) => {
     try {
-        // Ensure only super admin can view all restaurants
-        if (!req.user || req.user.role !== 'super_admin' || req.user.role !== 'user') {
-            return res.status(403).json({ message: "Access denied. Only Super Admin can view all restaurants." });
+        if (!req.user || !['super_admin', 'user'].includes(req.user.role)) {
+            return res.status(403).json({ message: "Access denied." });
         }
 
-        const restaurants = await Restaurant.find().populate('owner', 'name email');
+        let restaurants;
+        if (req.user.role === 'super_admin') {
+            // Super Admin sees all details
+            restaurants = await Restaurant.find().populate('owner', 'name email');
+        } else if (req.user.role === 'user') {
+            // Regular user sees limited details
+            restaurants = await Restaurant.find().select('name location cuisine');
+        }
+
         res.status(200).json(restaurants);
     } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -78,6 +85,7 @@ exports.getAllRestaurants = async (req, res) => {
         });
     }
 };
+
 
 exports.getRestaurantById = async (req, res) => {
     try {
