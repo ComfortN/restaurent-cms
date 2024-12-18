@@ -64,7 +64,7 @@ exports.createRestaurant = async (req, res) => {
 exports.getAllRestaurants = async (req, res) => {
     try {
         // Ensure only super admin can view all restaurants
-        if (!req.user || req.user.role !== 'super_admin') {
+        if (!req.user || req.user.role !== 'super_admin' || req.user.role !== 'user') {
             return res.status(403).json({ message: "Access denied. Only Super Admin can view all restaurants." });
         }
 
