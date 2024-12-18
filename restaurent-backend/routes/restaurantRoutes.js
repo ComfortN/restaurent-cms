@@ -14,7 +14,7 @@ const router = express.Router();
 router.post('/', protect(['super_admin']), createRestaurant);
 
 // Get all restaurants (Super Admin only)
-router.get('/', protect(['super_admin']), getAllRestaurants);
+router.get('/', protect(['super_admin', 'user']), getAllRestaurants);
 
 // Get a specific restaurant (Super Admin and Restaurant Admin with ownership)
 router.get('/:id', protect(['super_admin', 'restaurant_admin']), getRestaurantById);
