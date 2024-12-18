@@ -8,9 +8,14 @@ const restaurantRoutes = require('./routes/restaurantRoutes.js');
 const reservationRoutes = require('./routes/reservationRoutes.js')
 
 dotenv.config();
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: ['http://localhost:8081', 'http://localhost:3000'],
+    credentials: true
+  }));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
