@@ -38,17 +38,26 @@ const LoginScreen = ({ navigation }) => {
   }, [error]);
 
   const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Validation Error', 'Please enter both email and password');
-      return;
-    }
-
-    dispatch(loginUser({ email, password }));
+    const loginCredentials = {
+      email: email,
+      password: password
+    };
+  
+    dispatch(loginUser(loginCredentials))
+      .unwrap()
+      .then((result) => {
+        // Handle successful login
+        console.log('Login successful:', result);
+      })
+      .catch((error) => {
+        console.error('Login error:', error);
+        Alert.alert('Login Failed', error || 'Unable to log in');
+      });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Restaurant Management</Text>
+      <Text style={styles.title}>Restaurant CMS</Text>
       
       <TextInput
         style={styles.input}
@@ -85,13 +94,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F7BF90'
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20
+    marginBottom: 20,
+    color: '#B44E13',
   },
   input: {
     height: 50,
@@ -103,7 +113,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white'
   },
   loginButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center'

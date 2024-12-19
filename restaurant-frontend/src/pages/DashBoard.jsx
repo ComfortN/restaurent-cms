@@ -107,10 +107,10 @@ const SuperAdminDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F7BF90'
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -132,7 +132,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 20,
-    marginBottom: 10
+    marginBottom: 10,
+    color: '#B44E13'
   },
   statsContainer: {
     flexDirection: 'row',
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
   statBox: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFE1BB',
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
@@ -154,7 +155,8 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 10
+    marginTop: 10,
+    color: '#B44E13'
   },
   statLabel: {
     fontSize: 14,
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
     gap: 15
   },
   actionButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

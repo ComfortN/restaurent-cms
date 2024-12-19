@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { deleteRestaurant } from '../reduc/slices/restaurentSlice'
 
 const RestaurantDetailScreen = ({ route, navigation }) => {
     const { restaurant } = route.params;
@@ -31,10 +32,24 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
             text: 'Delete',
             style: 'destructive',
             onPress: () => {
-                // TODO: Implement actual delete logic using Redux action
-                Alert.alert('Deletion', 'Restaurant deleted successfully');
-                navigation.goBack();
-            }
+                dispatch(deleteRestaurant(restaurant._id))
+                    .then(() => {
+                        Alert.alert(
+                            'Success', 
+                            'Restaurant deleted successfully',
+                            [{ 
+                                text: 'OK', 
+                                onPress: () => navigation.goBack() 
+                            }]
+                        );
+                    })
+                    .catch((error) => {
+                        Alert.alert(
+                            'Error', 
+                            error.message || 'Failed to delete restaurant'
+                        );
+                    });
+    }
             }
         ]
         );
@@ -52,13 +67,13 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
                     style={styles.editButton}
                     onPress={handleEditRestaurant}
                 >
-                    <MaterialIcons name="edit" size={20} color="white" />
+                    <MaterialIcons name="edit" size={20} color= '#B44E13' />
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={styles.deleteButton}
                     onPress={handleDeleteRestaurant}
                 >
-                    <MaterialIcons name="delete" size={20} color="white" />
+                    <MaterialIcons name="delete" size={20} color= '#B44E13' />
                 </TouchableOpacity>
             </View>
         </View>
@@ -110,10 +125,10 @@ const RestaurantDetailScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5'
+        backgroundColor: '#F7BF90'
       },
       header: {
-        backgroundColor: '#007bff',
+        backgroundColor: '#B44E13',
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
@@ -167,12 +182,12 @@ const styles = StyleSheet.create({
         gap: 10
       },
       editButton: {
-        backgroundColor: '#28a745',
+        backgroundColor: '#FFE1BB',
         padding: 10,
         borderRadius: 5
       },
       deleteButton: {
-        backgroundColor: '#dc3545',
+        backgroundColor: '#FFE1BB',
         padding: 10,
         borderRadius: 5
       },
@@ -202,7 +217,7 @@ const styles = StyleSheet.create({
         gap: 10
     },
     detailSection: {
-        backgroundColor: 'white',
+        backgroundColor: '#FFE1BB',
         padding: 15,
         margin: 15,
         borderRadius: 10,
@@ -216,7 +231,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 15,
-        color: '#007bff'
+        color: '#B44E13'
     },
     detailItem: {
         flexDirection: 'row',
@@ -225,7 +240,8 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontWeight: 'bold',
         marginRight: 10,
-        width: 120
+        width: 120,
+        color: '#B44E13'
     },
     detailValue: {
         flex: 1

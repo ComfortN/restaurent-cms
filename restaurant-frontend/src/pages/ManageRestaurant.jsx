@@ -5,7 +5,8 @@ import {
   FlatList, 
   TouchableOpacity, 
   StyleSheet, 
-  Alert 
+  Alert, 
+  Image
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllRestaurants } from '../reduc/slices/restaurentSlice';
@@ -28,11 +29,17 @@ const ManageRestaurants = ({ navigation }) => {
   const renderRestaurantItem = ({ item }) => (
     <TouchableOpacity 
       style={styles.restaurantItem}
-      onPress={() => navigation.navigate('RestaurantDetail', { restaurant: item })}
+      onPress={() => navigation.navigate('RestaurantDetails', { restaurant: item })}
     >
+      {/* Display Restaurant Image */}
+      <Image 
+      source={{ uri: item.image?.url }} 
+      style={styles.restaurantImage} 
+      resizeMode="cover" 
+    />
       <View style={styles.restaurantDetails}>
         <Text style={styles.restaurantName}>{item.name}</Text>
-        <Text style={styles.restaurantAddress}>{item.address}</Text>
+        <Text style={styles.restaurantAddress}>{item.location}</Text>
         <Text style={styles.restaurantContact}>{item.contactNumber}</Text>
       </View>
     </TouchableOpacity>
@@ -77,10 +84,10 @@ const ManageRestaurants = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: 'white'
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
@@ -98,7 +105,7 @@ const styles = StyleSheet.create({
     padding: 15
   },
   restaurantItem: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFE1BB',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -111,6 +118,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3
   },
+  restaurantImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    marginRight: 10
+  },
   restaurantDetails: {
     flex: 1,
     marginRight: 10
@@ -118,7 +131,8 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5
+    marginBottom: 5,
+    color: '#B44E13'
   },
   restaurantAddress: {
     fontSize: 14,
