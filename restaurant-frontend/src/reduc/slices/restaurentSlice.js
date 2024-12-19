@@ -28,17 +28,64 @@ export const createRestaurant = createAsyncThunk(
   async (restaurantData, { rejectWithValue }) => {
     try {
       const token = await AsyncStorage.getItem('userToken');
+      
+      // Ensure the content type is multipart/form-data
       const response = await axios.post(`${API_URL}/restaurants`, restaurantData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
+      
       return response.data.restaurant;
     } catch (error) {
+      console.error('Full Create Restaurant Error:', 
+        error.response ? JSON.stringify(error.response.data) : error.message
+      );
+      
       return rejectWithValue(
         error.response?.data?.message || 'Failed to create restaurant'
       );
     }
   }
 );
+
+
+// Update Restaurant 
+export const updateRestaurant = createAsyncThunk(
+    'restaurants/update',
+    async ({ restaurantId, restaurantData }, { rejectWithValue }) => {
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            const response = await axios.put(`${API_URL}/restaurants/${restaurantId}`, restaurantData, {
+            headers: { Authorization: `Bearer ${token}` }
+            });
+            return response.data.restaurant;
+        } catch (error) {
+            return rejectWithValue(
+            error.response?.data?.message || 'Failed to update restaurant'
+            );
+        }
+        }
+    );
+    
+    // Delete Restaurant
+    export const deleteRestaurant = createAsyncThunk(
+        'restaurants/delete',
+        async (restaurantId, { rejectWithValue }) => {
+        try {
+            const token = await AsyncStorage.getItem('userToken');
+            await axios.delete(`${API_URL}/restaurants/${restaurantId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return restaurantId;
+        } catch (error) {
+            return rejectWithValue(
+            error.response?.data?.message || 'Failed to delete restaurant'
+        );
+        }
+        }
+    );
 
 const restaurantSlice = createSlice({
   name: 'restaurants',
@@ -84,7 +131,48 @@ const restaurantSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     });
-  }
+    
+  // Update Restaurant Cases
+    builder.addCase(updateRestaurant.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+    });
+    builder.addCase(updateRestaurant.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Replace the updated restaurant in the list
+        const index = state.restaurants.findIndex(r => r._id === action.payload._id);
+        if (index !== -1) {
+            state.restaurants[index] = action.payload;
+        }
+        // Update selected restaurant if it exists
+        if (state.selectedRestaurant?._id === action.payload._id) {
+            state.selectedRestaurant = action.payload;
+        }
+    });
+    builder.addCase(updateRestaurant.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+    });
+
+    // Delete Restaurant Cases
+    builder.addCase(deleteRestaurant.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+    });
+    builder.addCase(deleteRestaurant.fulfilled, (state, action) => {
+        state.isLoading = false;
+        // Remove the deleted restaurant from the list
+        state.restaurants = state.restaurants.filter(r => r._id !== action.payload);
+        // Clear selected restaurant if it was the deleted one
+        if (state.selectedRestaurant?._id === action.payload) {
+            state.selectedRestaurant = null;
+        }
+    });
+    builder.addCase(deleteRestaurant.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+    });
+    }
 });
 
 export const { clearError, setSelectedRestaurant } = restaurantSlice.actions;

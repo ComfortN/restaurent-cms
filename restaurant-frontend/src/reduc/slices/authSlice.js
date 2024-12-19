@@ -20,7 +20,18 @@ export const loginUser = createAsyncThunk(
         role: response.data.role
       };
     } catch (error) {
+      console.error('Full Login Error:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
       return rejectWithValue(
+        
         error.response?.data?.message && 'Login failed'
       );
     }
@@ -52,6 +63,26 @@ export const logoutUser = createAsyncThunk(
   async () => {
     await AsyncStorage.removeItem('userToken');
     return null;
+  }
+);
+
+
+// Async thunk for creating restaurant admin
+export const createRestaurantAdmin = createAsyncThunk(
+  'auth/createRestaurantAdmin',
+  async (adminData, { rejectWithValue }) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await axios.post(`${API_URL}/auth/create-restaurant-admin`, adminData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to create restaurant admin'
+      );
+    }
   }
 );
 
@@ -99,6 +130,20 @@ const authSlice = createSlice({
       state.user = null;
       state.role = null;
       state.isAuthenticated = false;
+    });
+
+    // Add this to your extraReducers in the existing slice
+    builder.addCase(createRestaurantAdmin.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(createRestaurantAdmin.fulfilled, (state, action) => {
+      state.isLoading = false;
+      // Optionally, you might want to do something with the created admin
+    });
+    builder.addCase(createRestaurantAdmin.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
     });
   }
 });
