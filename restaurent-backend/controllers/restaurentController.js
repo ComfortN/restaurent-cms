@@ -25,15 +25,8 @@ exports.createRestaurant = async (req, res) => {
             return res.status(400).json({ message: "Restaurant with this name and location already exists." });
         }
 
-        let imageData = {};
-        if (req.file) {
-            imageData = {
-                url: req.file.path, // Or your cloud storage URL
-                publicId: req.file.filename || '', // Depends on your storage method
-                originalName: req.file.originalname,
-                mimetype: req.file.mimetype
-            };
-        }
+        // Handle the image if uploaded
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
         // Create new restaurant
         const newRestaurant = await Restaurant.create({
@@ -45,8 +38,11 @@ exports.createRestaurant = async (req, res) => {
             websiteUrl,
             openingHours,
             tags,
-            image: imageData
+            image: imageUrl,
         });
+        console.log('Body:', req.body);
+        console.log('File:', req.file);
+
 
         res.status(201).json({ 
             message: "Restaurant created successfully", 
