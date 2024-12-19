@@ -11,14 +11,10 @@ const restaurantSchema = new mongoose.Schema({
     tags: [{ type: String, default: [] }],
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Owner is a Restaurant Admin
     image: {
-        type: {
-            url: { type: String, default: '' },
-            publicId: { type: String, default: '' },
-            originalName: { type: String, default: '' },
-            mimetype: { type: String, default: '' }
-        },
-        default: {}
-    }
+        id: String,          // Firestore document ID
+        originalName: String,
+        mimetype: String
+      }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Restaurant', restaurantSchema);
