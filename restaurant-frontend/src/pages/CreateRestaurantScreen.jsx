@@ -6,11 +6,13 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ScrollView, 
-  Alert 
+  Alert, 
+  Image
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createRestaurant } from '../reduc/slices/restaurentSlice';
 import { FontAwesome5 } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 const CreateRestaurant = ({ navigation }) => {
   const [restaurantData, setRestaurantData] = useState({
@@ -23,6 +25,7 @@ const CreateRestaurant = ({ navigation }) => {
     openingHours: '',
     tags: []
   });
+  const [image, setImage] = useState(null);
 
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector(state => state.restaurants);
@@ -43,31 +46,68 @@ const CreateRestaurant = ({ navigation }) => {
     }));
   };
 
-  const handleCreateRestaurant = () => {
-    // Basic validation
-    const requiredFields = ['name', 'location', 'cuisine'];
-    const missingFields = requiredFields.filter(field => !restaurantData[field]);
-
-    if (missingFields.length > 0) {
-      Alert.alert(
-        'Validation Error', 
-        `Please fill in the following required fields: ${missingFields.join(', ')}`
-      );
+  const pickImage = async () => {
+    console.log('pickImage function called');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need access to your photos to proceed!');
       return;
     }
-
-    dispatch(createRestaurant(restaurantData))
-      .then((response) => {
-        if (response.meta.requestStatus === 'fulfilled') {
-          Alert.alert('Success', 'Restaurant created successfully', [
-            { text: 'OK', onPress: () => navigation.goBack() }
-          ]);
-        }
-      })
-      .catch((error) => {
-        Alert.alert('Error', error.message);
-      });
+  
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+    });
+  
+    if (!result.canceled) {
+      setImage(result.assets[0]);
+    }
   };
+
+
+  const handleCreateRestaurant = async() => {
+    try {
+        const formData = new FormData();
+        
+        // Add the required fields
+        formData.append('name', restaurantData.name);
+        formData.append('location', restaurantData.location);
+        formData.append('cuisine', restaurantData.cuisine);
+        
+        // Add optional fields
+        formData.append('description', restaurantData.description || '');
+        formData.append('contactNumber', restaurantData.contactNumber || '');
+        formData.append('websiteUrl', restaurantData.websiteUrl || '');
+        formData.append('openingHours', restaurantData.openingHours || '');
+        formData.append('tags', JSON.stringify(restaurantData.tags || []));
+
+        // Add image if selected
+        if (image) {
+            const uriParts = image.uri.split('.');
+            const fileType = uriParts[uriParts.length - 1];
+            
+            formData.append('image', {
+                uri: image.uri,
+                type: `image/${fileType}`,
+                name: `photo.${fileType}`,
+            });
+        }
+
+        // Log the form data
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}:`, value);
+        }
+
+        const response = await dispatch(createRestaurant(formData)).unwrap();
+        Alert.alert('Success', 'Restaurant created successfully');
+        navigation.goBack();
+    } catch (error) {
+        console.error('Error creating restaurant:', error);
+        Alert.alert('Error', error.message || 'Failed to create restaurant');
+    }
+};
 
   return (
     <ScrollView style={styles.container}>
@@ -79,6 +119,25 @@ const CreateRestaurant = ({ navigation }) => {
       </View>
 
       <View style={styles.formContainer}>
+      {/* Image Upload Section */}
+      <Text style={styles.label}>Restaurant Image</Text>
+        <TouchableOpacity 
+          style={styles.imagePicker} 
+          onPress={pickImage}
+        >
+          {image ? (
+            <Image 
+              source={{ uri: image.uri }} 
+              style={styles.imagePreview} 
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <FontAwesome5 name="camera" size={30} color="#B44E13" />
+              <Text style={styles.imagePickerText}>Add Image</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
         {/* Required Fields */}
         <Text style={styles.label}>Restaurant Name *</Text>
         <TextInput
@@ -169,10 +228,10 @@ const CreateRestaurant = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5'
+    backgroundColor: '#F7BF90'
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
@@ -187,12 +246,40 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   formContainer: {
-    padding: 20
+    padding: 20,
+    color: '#B44E13'
+  },
+  imagePicker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    backgroundColor: 'white',
+    aspectRatio: 16/9,
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  imagePickerText: {
+    marginTop: 10,
+    color: '#B44E13',
+    fontSize: 16,
   },
   label: {
     fontSize: 16,
     marginBottom: 5,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    color: '#B44E13'
   },
   input: {
     backgroundColor: 'white',
@@ -203,7 +290,7 @@ const styles = StyleSheet.create({
     marginBottom: 15
   },
   createButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: '#B44E13',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
