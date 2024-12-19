@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes.js');
 const reservationRoutes = require('./routes/reservationRoutes.js')
+const path = require('path');
 
 dotenv.config();
 const cors = require('cors');
@@ -16,6 +17,7 @@ app.use(cors({
     origin: ['http://localhost:8081', 'http://localhost:3000'],
     credentials: true
   }));
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)

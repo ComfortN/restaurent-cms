@@ -7,11 +7,11 @@ const {
     deleteRestaurant 
 } = require('../controllers/restaurentController');
 const { protect } = require('../middlewares/authMiddleware.js');
-
+const upload = require('../middlewares/uploadMiddleware.js')
 const router = express.Router();
 
 // Create a new restaurant (Super Admin only)
-router.post('/', protect(['super_admin']), createRestaurant);
+router.post('/', upload.single('image'), protect(['super_admin']), createRestaurant);
 
 // Get all restaurants (Super Admin only)
 router.get('/', protect(['super_admin', 'user']), getAllRestaurants);

@@ -1,48 +1,112 @@
 const Restaurant = require('../models/Restaurent');
 const User = require('../models/User');
 
+// exports.createRestaurant = async (req, res) => {
+//     try {
+//         // Ensure only super admin can create restaurants
+//         if (!req.user || req.user.role !== 'super_admin') {
+//             return res.status(403).json({ message: "Access denied. Only Super Admin can create restaurants." });
+//         }
+
+//         const { 
+//             name, 
+//             location, 
+//             cuisine, 
+//             description = '', 
+//             contactNumber = '', 
+//             websiteUrl = '', 
+//             openingHours = '',
+//             tags = []
+//         } = req.body;
+
+//         // Check if restaurant with same name and location already exists
+//         const existingRestaurant = await Restaurant.findOne({ name, location });
+//         if (existingRestaurant) {
+//             return res.status(400).json({ message: "Restaurant with this name and location already exists." });
+//         }
+
+//         // Handle the image if uploaded
+//         const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+//         // Create new restaurant
+//         const newRestaurant = await Restaurant.create({
+//             name,
+//             location,
+//             cuisine,
+//             description,
+//             contactNumber,
+//             websiteUrl,
+//             openingHours,
+//             tags,
+//             image: imageUrl,
+//         });
+//         console.log('Body:', req.body);
+//         console.log('File:', req.file);
+
+
+//         res.status(201).json({ 
+//             message: "Restaurant created successfully", 
+//             restaurant: newRestaurant 
+//         });
+//     } catch (error) {
+//         console.error("Error creating restaurant:", error);
+//         res.status(500).json({ 
+//             message: "Server error", 
+//             error: error.message 
+//         });
+//     }
+// };
+
+
 exports.createRestaurant = async (req, res) => {
     try {
+        // Log the incoming request data
+        console.log('Request Body:', req.body);
+        console.log('Request File:', req.file);
+
         // Ensure only super admin can create restaurants
         if (!req.user || req.user.role !== 'super_admin') {
             return res.status(403).json({ message: "Access denied. Only Super Admin can create restaurants." });
         }
 
-        const { 
-            name, 
-            location, 
-            cuisine, 
-            description = '', 
-            contactNumber = '', 
-            websiteUrl = '', 
-            openingHours = '',
-            tags = []
-        } = req.body;
-
-        // Check if restaurant with same name and location already exists
-        const existingRestaurant = await Restaurant.findOne({ name, location });
-        if (existingRestaurant) {
-            return res.status(400).json({ message: "Restaurant with this name and location already exists." });
+        // Parse the tags if they exist
+        let parsedTags = [];
+        if (req.body.tags) {
+            try {
+                parsedTags = JSON.parse(req.body.tags);
+            } catch (e) {
+                console.log('Error parsing tags:', e);
+                parsedTags = req.body.tags.split(',').map(tag => tag.trim());
+            }
         }
 
-        // Handle the image if uploaded
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+        // Prepare restaurant data
+        const restaurantData = {
+            name: req.body.name,
+            location: req.body.location,
+            cuisine: req.body.cuisine,
+            description: req.body.description || '',
+            contactNumber: req.body.contactNumber || '',
+            websiteUrl: req.body.websiteUrl || '',
+            openingHours: req.body.openingHours || '',
+            tags: parsedTags,
+        };
+
+        // Add image data if a file was uploaded
+        if (req.file) {
+            restaurantData.image = {
+                url: `/uploads/${req.file.filename}`,
+                publicId: '',
+                originalName: req.file.originalname,
+                mimetype: req.file.mimetype
+            };
+        }
+
+        // Log the data being sent to create the restaurant
+        console.log('Creating restaurant with data:', restaurantData);
 
         // Create new restaurant
-        const newRestaurant = await Restaurant.create({
-            name,
-            location,
-            cuisine,
-            description,
-            contactNumber,
-            websiteUrl,
-            openingHours,
-            tags,
-            image: imageUrl,
-        });
-        console.log('Body:', req.body);
-        console.log('File:', req.file);
-
+        const newRestaurant = await Restaurant.create(restaurantData);
 
         res.status(201).json({ 
             message: "Restaurant created successfully", 
@@ -52,7 +116,8 @@ exports.createRestaurant = async (req, res) => {
         console.error("Error creating restaurant:", error);
         res.status(500).json({ 
             message: "Server error", 
-            error: error.message 
+            error: error.message,
+            details: error.errors // Include validation errors if any
         });
     }
 };
