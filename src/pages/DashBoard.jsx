@@ -1,1 +1,0 @@
-<Restaurants className="jsx"></Restaurants>
