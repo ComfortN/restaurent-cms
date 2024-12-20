@@ -91,14 +91,19 @@ const CreateReservation = ({ navigation }) => {
       time.getMinutes()
     );
 
+    // Format the date and time separately
+  const formattedDate = date.toISOString().split('T')[0];
+  const formattedTime = time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
     // Prepare reservation data
     const reservationData = {
       restaurantId: user?.restaurantId?._id,
+      date: formattedDate,
+      time: formattedTime,
+      guests: parseInt(partySize),
       customerName: customerName.trim(),
       customerEmail: customerEmail.trim(),
-      customerPhone: customerPhone.trim(),
-      partySize: parseInt(partySize),
-      reservationDateTime: reservationDateTime.toISOString(),
+      customerPhoneNumber: customerPhone.trim(), // Note: changed from customerPhone to customerPhoneNumber
       specialRequests: specialRequests.trim() || undefined
     };
 

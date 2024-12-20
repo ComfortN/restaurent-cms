@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchRestaurantReservations, updateReservationStatus } from '../reduc/slices/reservationSlice';
 import { FontAwesome5 } from '@expo/vector-icons';
 
-const ManageReservations = () => {
+const ManageReservations = ( { navigation } ) => {
   const dispatch = useDispatch();
   const { reservations, isLoading } = useSelector((state) => state.reservations);
   const { user } = useSelector((state) => state.auth);
@@ -94,7 +94,7 @@ const ManageReservations = () => {
               >
                 <FontAwesome5 name="arrow-left" size={20} color="white" />
               </TouchableOpacity>
-              <Text style={styles.headerTitle}>Create Reservation</Text>
+              <Text style={styles.headerTitle}>Manage Reservation</Text>
             </View>
 
       {/* Filter Buttons */}
