@@ -160,11 +160,13 @@ exports.updateRestaurant = async (req, res) => {
             return res.status(404).json({ message: "Restaurant not found" });
         }
 
+        // Check authorization
         if (req.user.role === 'restaurant_admin' && 
             restaurant.owner.toString() !== req.user.id) {
             return res.status(403).json({ message: "Access denied" });
         }
 
+        // Update basic fields
         const fieldsToUpdate = [
             'name', 'location', 'cuisine', 'description', 
             'contactNumber', 'websiteUrl', 'openingHours'
@@ -176,6 +178,7 @@ exports.updateRestaurant = async (req, res) => {
             }
         });
 
+        // Handle tags
         if (req.body.tags) {
             try {
                 restaurant.tags = typeof req.body.tags === 'string' 
@@ -188,26 +191,63 @@ exports.updateRestaurant = async (req, res) => {
 
         // Handle image update
         if (req.file) {
-            // Delete old image from Firestore if it exists
-            if (restaurant.image?.id) {
-                await deleteFromFirestore(restaurant.image.id);
+            try {
+                // Delete old image from Firestore if it exists
+                if (restaurant.image?.id) {
+                    try {
+                        await deleteFromFirestore(restaurant.image.id);
+                    } catch (deleteError) {
+                        console.error('Error deleting old image:', deleteError);
+                        // Continue with update even if delete fails
+                    }
+                }
+                
+                // Save new image to Firestore
+                const imageData = await saveToFirestore(req.file, restaurant._id.toString());
+                restaurant.image = {
+                    id: imageData.id,
+                    originalName: imageData.originalName,
+                    mimetype: imageData.mimetype,
+                    data: imageData.url // Store the base64 data URL
+                };
+            } catch (imageError) {
+                console.error('Error processing image:', imageError);
+                return res.status(500).json({ 
+                    message: "Failed to process image update", 
+                    error: imageError.message 
+                });
             }
-            
-            // Save new image to Firestore
-            const imageData = await saveToFirestore(req.file, restaurant._id.toString());
-            restaurant.image = {
-                id: imageData.id,
-                originalName: imageData.originalName,
-                mimetype: imageData.mimetype
-            };
         }
 
-        await restaurant.save();
+        // Save the updated restaurant
+        const updatedRestaurant = await restaurant.save();
+
+        // If successful, fetch the complete restaurant data including image
+        const restaurantWithImage = updatedRestaurant.toObject();
+        
+        if (restaurantWithImage.image?.id) {
+            try {
+                const imageDocRef = doc(db, 'restaurantImages', restaurantWithImage.image.id);
+                const imageDoc = await getDoc(imageDocRef);
+                
+                if (imageDoc.exists()) {
+                    const imageData = imageDoc.data();
+                    restaurantWithImage.image = {
+                        ...restaurantWithImage.image,
+                        data: imageData.data
+                    };
+                }
+            } catch (fetchError) {
+                console.error('Error fetching updated image:', fetchError);
+                // Continue without image data if fetch fails
+            }
+        }
 
         res.status(200).json({ 
             message: "Restaurant updated successfully", 
-            restaurant 
+            restaurant: restaurantWithImage 
         });
+
     } catch (error) {
         console.error("Error updating restaurant:", error);
         res.status(500).json({ 
