@@ -32,6 +32,7 @@ router.put('/:reservationId', protect(['user']), reservationController.updateUse
 router.delete('/:reservationId', protect(['user']), reservationController.cancelUserReservation);
 
 // Admin routes
+router.post('/', protect(['restaurant_admin']), reservationController.createReservation);
 router.get('/restaurant/:restaurantId', protect(['restaurant_admin']), reservationController.getRestaurantReservations);
 router.put('/status/:reservationId', protect(['restaurant_admin']), reservationController.updateReservationStatus);
 
