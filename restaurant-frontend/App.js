@@ -15,6 +15,7 @@ import RestaurantDetailScreen from './src/pages/RestaurantDetails';
 import CreateRestaurantAdmin from './src/pages/CreateRestaurantAdmin';
 import ManageReservations from './src/pages/ManageReservations';
 import CreateReservation from './src/pages/CreateReservationAdmin';
+import ReviewsSection from './src/pages/ReviewsSection';
 
 const Stack = createStackNavigator();
 
@@ -68,6 +69,10 @@ const App = () => {
           <Stack.Screen
           name='CreateReservation'
           component={CreateReservation}
+          />
+          <Stack.Screen
+          name='Reviews'
+          component={ReviewsSection}
           />
 
         </Stack.Navigator>

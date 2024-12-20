@@ -10,27 +10,34 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, fetchUserProfile } from '../reduc/slices/authSlice';
 import { fetchRestaurantReservations } from '../reduc/slices/reservationSlice';
-import { fetchAllRestaurants, setSelectedRestaurant } from '../reduc/slices/restaurentSlice';
+import { 
+  fetchAllRestaurants, 
+  fetchRestaurantById, 
+  setSelectedRestaurant, 
+  fetchRestaurantReviews 
+} from '../reduc/slices/restaurentSlice';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
 const RestaurantAdminDashboard = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const { reservations, isLoading } = useSelector(state => state.reservations);
-  const { restaurants } = useSelector(state => state.restaurants);
+  const { reservations, isLoading: reservationsLoading } = useSelector(state => state.reservations);
+  const { restaurants, selectedRestaurant, isLoading: restaurantsLoading } = useSelector(state => state.restaurants);
+  const { reviews } = useSelector(state => state.restaurants);
 
   useEffect(() => {
     dispatch(fetchUserProfile());
     dispatch(fetchAllRestaurants());
 
-    // Log user and restaurant details
-    console.log('User:', user);
-    console.log('Restaurant:', user?.restaurantId);
-
     // Fetch reservations for the admin's specific restaurant
     if (user?.restaurantId?._id) {
-      console.log('Dispatching fetchRestaurantReservations with:', user.restaurantId);
+      dispatch(fetchRestaurantById(user.restaurantId._id));
       dispatch(fetchRestaurantReservations(user.restaurantId._id));
+      dispatch(fetchRestaurantReviews({
+        restaurantId: user.restaurantId._id,
+        page: 1,
+        limit: 3 // Show only latest 3 reviews in dashboard
+      }));
     }
   }, [dispatch, user?.restaurantId?._id]);
 
@@ -43,6 +50,18 @@ const RestaurantAdminDashboard = ({ navigation }) => {
     }
   }, [restaurants, user?.restaurantId?._id, dispatch]);
 
+  const renderStars = (rating) => {
+    return [...Array(5)].map((_, index) => (
+      <FontAwesome5
+        key={index}
+        name={index < rating ? "star" : "star-o"}
+        size={14}
+        color={index < rating ? "#FFD700" : "#BDC3C7"}
+        style={{ marginRight: 2 }}
+      />
+    ));
+  };
+
   const handleLogout = () => {
     dispatch(logoutUser());
     navigation.replace('Login');
@@ -53,9 +72,7 @@ const RestaurantAdminDashboard = ({ navigation }) => {
   };
 
   const handleRestaurantDetails = () => {
-    const selectedRestaurant = restaurants.find(r => r._id === user.restaurantId._id);
     if (selectedRestaurant) {
-      console.log('nav res details: ', selectedRestaurant)
       navigation.navigate('RestaurantDetails', { restaurant: selectedRestaurant });
     } else {
       Alert.alert('Error', 'Restaurant details not found');
@@ -69,7 +86,7 @@ const RestaurantAdminDashboard = ({ navigation }) => {
   }, {});
 
   // If loading, show a loading state
-  if (isLoading) {
+  if (restaurantsLoading || reservationsLoading) {
     return (
       <View style={styles.loadingContainer}>
         <Text>Loading...</Text>
@@ -96,10 +113,10 @@ const RestaurantAdminDashboard = ({ navigation }) => {
           <FontAwesome5 name="store" size={30} color="#B44E13" />
           <View style={styles.restaurantDetails}>
             <Text style={styles.restaurantName}>
-              {user?.restaurantId?.name || 'My Restaurant'}
+              {selectedRestaurant?.name || 'My Restaurant'}
             </Text>
             <Text style={styles.restaurantLocation}>
-              {user?.restaurantId?.location || 'Location Not Set'}
+              {selectedRestaurant?.location || 'Location Not Set'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -118,7 +135,7 @@ const RestaurantAdminDashboard = ({ navigation }) => {
           <View style={styles.statBox}>
             <FontAwesome5 name="check-circle" size={30} color="#17a2b8" />
             <Text style={styles.statNumber}>
-              {reservationStats.confirmed}
+              {reservationStats.confirmed || 0}
             </Text>
             <Text style={styles.statLabel}>Confirmed</Text>
           </View>
@@ -126,13 +143,39 @@ const RestaurantAdminDashboard = ({ navigation }) => {
 
         <View style={styles.additionalStatsContainer}>
           <View style={styles.smallStatBox}>
-            <Text style={styles.statNumber}>{reservationStats.pending}</Text>
+            <Text style={styles.statNumber}>{reservationStats.pending || 0}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
           <View style={styles.smallStatBox}>
-            <Text style={styles.statNumber}>{reservationStats.cancelled}</Text>
+            <Text style={styles.statNumber}>{reservationStats.cancelled || 0}</Text>
             <Text style={styles.statLabel}>Cancelled</Text>
           </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Latest Reviews</Text>
+        <View style={styles.reviewsContainer}>
+          {reviews?.items?.slice(0, 3).map((review) => (
+            <View key={review._id} style={styles.reviewItem}>
+              <View style={styles.reviewHeader}>
+                <Text style={styles.reviewerName}>
+                  {review.userId?.name || 'Anonymous'}
+                </Text>
+                <View style={styles.ratingContainer}>
+                  {renderStars(review.rating)}
+                </View>
+              </View>
+              <Text style={styles.reviewComment} numberOfLines={2}>
+                {review.comment}
+              </Text>
+            </View>
+          ))}
+          
+          <TouchableOpacity 
+            style={styles.viewAllButton}
+            onPress={() => navigation.navigate('Reviews')}
+          >
+            <Text style={styles.viewAllButtonText}>View All Reviews</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -242,6 +285,46 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: '#666'
+  },
+  reviewsContainer: {
+    backgroundColor: '#FFE1BB',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  },
+  reviewItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F7BF90',
+    paddingVertical: 10,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  reviewerName: {
+    fontWeight: 'bold',
+    color: '#B44E13',
+    fontSize: 14,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+  },
+  reviewComment: {
+    color: '#666',
+    fontSize: 13,
+  },
+  viewAllButton: {
+    backgroundColor: '#B44E13',
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  viewAllButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   actionContainer: {
     gap: 15

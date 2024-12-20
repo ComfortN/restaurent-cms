@@ -22,6 +22,25 @@ export const fetchAllRestaurants = createAsyncThunk(
   }
 );
 
+export const fetchRestaurantById = createAsyncThunk(
+  'restaurants/fetchById',
+  async (restaurantId, { rejectWithValue }) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      const response = await axios.get(`${API_URL}/restaurants/${restaurantId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('Fetched Restaurant Data:', response.data); // Add this line
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching restaurant by ID:', error);
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch restaurant details'
+      );
+    }
+  }
+);
+
 // Create restaurant (super admin)
 export const createRestaurant = createAsyncThunk(
   'restaurants/create',
@@ -89,11 +108,38 @@ export const updateRestaurant = createAsyncThunk(
         }
     );
 
+    
+
+    //Fetch restaurant reviews
+    export const fetchRestaurantReviews = createAsyncThunk(
+      'restaurants/fetchReviews',
+      async ({ restaurantId, page = 1, limit = 10 }, { rejectWithValue }) => {
+        try {
+          const token = await AsyncStorage.getItem('userToken');
+          const response = await axios.get(
+            `${API_URL}/reviews/restaurants/${restaurantId}/reviews?page=${page}&limit=${limit}`,
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+          return response.data;
+        } catch (error) {
+          return rejectWithValue(error.response?.data?.message || 'Failed to fetch reviews');
+        }
+      }
+    );
+
 const restaurantSlice = createSlice({
   name: 'restaurants',
   initialState: {
     restaurants: [],
     selectedRestaurant: null,
+    reviews: {
+      items: [],
+      totalPages: 0,
+      currentPage: 1,
+      totalReviews: 0
+    },
     isLoading: false,
     error: null
   },
@@ -116,6 +162,24 @@ const restaurantSlice = createSlice({
       state.restaurants = action.payload;
     });
     builder.addCase(fetchAllRestaurants.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    });
+
+    builder.addCase(fetchRestaurantById.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchRestaurantById.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.selectedRestaurant = action.payload;
+      // Update the restaurant in the list if it exists
+      const index = state.restaurants.findIndex(r => r._id === action.payload._id);
+      if (index !== -1) {
+        state.restaurants[index] = action.payload;
+      }
+    });
+    builder.addCase(fetchRestaurantById.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action.payload;
     });
@@ -173,6 +237,30 @@ const restaurantSlice = createSlice({
     builder.addCase(deleteRestaurant.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+    });
+
+    // Fetch restaurant reviews
+    builder.addCase(fetchRestaurantReviews.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchRestaurantReviews.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.reviews = {
+        items: action.payload.reviews,
+        totalPages: action.payload.totalPages,
+        currentPage: action.payload.currentPage,
+        totalReviews: action.payload.totalReviews
+      };
+      // Update selectedRestaurant with totalReviews and averageRating
+      if (state.selectedRestaurant) {
+        state.selectedRestaurant.totalReviews = action.payload.totalReviews;
+        state.selectedRestaurant.averageRating = action.payload.averageRating;
+      }
+    });
+    builder.addCase(fetchRestaurantReviews.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
     });
     }
 });
