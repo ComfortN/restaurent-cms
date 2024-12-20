@@ -1,70 +1,105 @@
-# Getting Started with Create React App
+# Restaurant Management Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
+A comprehensive React Native application for managing restaurants, reservations, and restaurant admins. The application supports multiple user roles including super admin and restaurant admin, each with their specific functionalities and dashboards.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+### Super Admin Features
+- Dashboard with overview statistics
+- Create and manage restaurants
+- Create restaurant admin accounts
+- View and manage all restaurants in the system
+- Complete restaurant management capabilities
 
-### `npm start`
+### Restaurant Admin Features
+- Dashboard with restaurant-specific statistics
+- Manage reservations
+- View and respond to customer reviews
+- Create new reservations
+- Monitor restaurant performance
+- Track customer feedback
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### General Features
+- User authentication and authorization
+- Role-based access control
+- Real-time statistics and updates
+- Image upload capabilities
+- Responsive design for various screen sizes
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Technical Stack
 
-### `npm test`
+### Frontend
+- React Native
+- React Navigation for routing
+- Redux for state management
+- Expo for development and building
+- Native components from @react-native-community
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### UI Components
+- Custom styled components
+- FontAwesome5 and MaterialIcons for icons
+- Native DateTimePicker
+- Image Picker for photo uploads
 
-### `npm run build`
+## Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
+```bash
+git clone https://github.com/ComfortN/restaurent-cms.git
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies:
+```bash
+cd restaurent-cms/restaurant-frontend
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Start the development server:
+```bash
+npm start
+# or
+expo start
+```
 
-### `npm run eject`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Key Components
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Navigation
+The app uses React Navigation with a stack navigator for screen management. The navigation structure includes:
+- Login Screen
+- Super Admin Dashboard
+- Restaurant Admin Dashboard
+- Various management screens
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### State Management
+Redux is used for state management with the following slices:
+- Authentication (authSlice)
+- Restaurants (restaurantSlice)
+- Reservations (reservationSlice)
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Styling
+The application uses a consistent color scheme:
+- Primary: #B44E13
+- Background: #F7BF90
+- Accent: #FFE1BB
+- Text: Various shades for hierarchy
 
-## Learn More
+## Development Guidelines
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Code Style
+- Use functional components with hooks
+- Implement proper error handling
+- Follow React Native best practices
+- Maintain consistent styling patterns
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### State Management
+- Use Redux for global state
+- Utilize local state for component-specific data
+- Implement proper loading and error states
 
-### Code Splitting
+### Navigation
+- Implement proper navigation guards
+- Handle deep linking appropriately
+- Maintain clean navigation stacks
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
