@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 const EditRestaurantScreen = ({ route, navigation }) => {
     const { restaurant } = route.params;
     const dispatch = useDispatch();
+    const [isLoading, setIsLoading] = useState(false);
 
     // State for form fields
     const [name, setName] = useState(restaurant.name);
@@ -28,23 +29,15 @@ const EditRestaurantScreen = ({ route, navigation }) => {
     const [websiteUrl, setWebsiteUrl] = useState(restaurant.websiteUrl);
     const [tags, setTags] = useState(restaurant.tags ? restaurant.tags.join(', ') : '');
     const [image, setImage] = useState(null);
+    const [imageUri, setImageUri] = useState(null);
 
-    // const serverBaseUrl = 'https://restaurent-cms.onrender.com/uplouds/'; // Replace with your actual server URL
-    // const absoluteImageUrl = `${serverBaseUrl}${image}`;
 
 
     // Initialize image from restaurant data
     useEffect(() => {
-        if (restaurant.image) {
-            const imageUrl = restaurant.image.url;
-            // Handle both full URLs and relative paths
-            if (imageUrl.startsWith('http')) {
-                setImage(imageUrl);
-            } else {
-                // Construct full URL for relative paths
-                const serverBaseUrl = 'https://restaurent-cms.onrender.com';
-                setImage(`${serverBaseUrl}${imageUrl}`);
-            }
+        if (restaurant.image?.data) {
+            // If we have base64 data, use it directly
+            setImageUri(restaurant.image.data);
         }
     }, [restaurant]);
 
@@ -59,6 +52,7 @@ const EditRestaurantScreen = ({ route, navigation }) => {
 
             if (!result.canceled) {
                 setImage(result.assets[0].uri);
+                setImageUri(result.assets[0].uri);
             }
         } catch (error) {
             Alert.alert('Error', 'Failed to pick image');
@@ -75,6 +69,8 @@ const EditRestaurantScreen = ({ route, navigation }) => {
             return;
         }
 
+        setIsLoading(true);
+    
         const formData = new FormData();
         formData.append('name', name);
         formData.append('cuisine', cuisine);
@@ -84,19 +80,25 @@ const EditRestaurantScreen = ({ route, navigation }) => {
         formData.append('openingHours', openingHours);
         formData.append('websiteUrl', websiteUrl);
         formData.append('tags', tags ? tags.split(',').map(tag => tag.trim()).join(',') : '');
-
-        // Only append image if it's a local file (new image picked)
-        if (image && image.startsWith('file://')) {
-            const imageName = image.split('/').pop();
-            const imageType = `image/${imageName.split('.').pop()}`;
+    
+        // Handle image upload
+        if (image) {
+            // Get the file extension
+            const imageExtension = image.split('.').pop();
+            
+            // Create file name
+            const fileName = `${Date.now()}.${imageExtension}`;
+            
+            // Append image to form data
             formData.append('image', {
                 uri: image,
-                name: imageName,
-                type: imageType,
+                type: `image/${imageExtension}`,
+                name: fileName,
             });
         }
-
+    
         try {
+            console.log('Sending update with formData:', formData);
             await dispatch(updateRestaurant({ 
                 restaurantId: restaurant._id, 
                 restaurantData: formData 
@@ -108,7 +110,10 @@ const EditRestaurantScreen = ({ route, navigation }) => {
                 [{ text: 'OK', onPress: () => navigation.goBack() }]
             );
         } catch (error) {
+            console.error('Update error:', error);
             Alert.alert('Error', error.message || 'Failed to update restaurant');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -118,18 +123,28 @@ const EditRestaurantScreen = ({ route, navigation }) => {
                 <Text style={styles.title}>Edit Restaurant</Text>
                 
                 <Text style={styles.label}>Restaurant Image</Text>
-                {image ? (
-                    <Image 
-                        source={{ uri: image }} 
-                        style={styles.imagePreview}
-                        onError={(e) => console.error('Image loading error:', e.nativeEvent.error)}
-                    />
+                {imageUri ? (
+                    <View style={styles.imageContainer}>
+                        <Image 
+                            source={{ uri: imageUri }} 
+                            style={styles.imagePreview}
+                            onError={(e) => {
+                                console.error('Image loading error:', e.nativeEvent.error);
+                                setImageUri(null); // Reset on error
+                            }}
+                        />
+                        <TouchableOpacity 
+                            style={styles.changeImageButton} 
+                            onPress={pickImage}
+                        >
+                            <Text style={styles.changeImageText}>Change Image</Text>
+                        </TouchableOpacity>
+                    </View>
                 ) : (
-                    <Text>No Image Selected</Text>
+                    <TouchableOpacity onPress={pickImage} style={styles.pickImageButton}>
+                        <Text style={styles.pickImageButtonText}>Pick an Image</Text>
+                    </TouchableOpacity>
                 )}
-                <TouchableOpacity onPress={pickImage} style={styles.pickImageButton}>
-                    <Text style={styles.pickImageButtonText}>Pick an Image</Text>
-                </TouchableOpacity>
 
                 <Text style={styles.label}>Restaurant Name *</Text>
                 <TextInput
@@ -199,12 +214,15 @@ const EditRestaurantScreen = ({ route, navigation }) => {
                     placeholder="Enter tags (e.g., family-friendly, outdoor seating)"
                 />
 
-                <TouchableOpacity 
-                    style={styles.saveButton}
-                    onPress={handleSave}
-                >
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                </TouchableOpacity>
+<TouchableOpacity 
+                style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
+                onPress={handleSave}
+                disabled={isLoading}
+            >
+                <Text style={styles.saveButtonText}>
+                    {isLoading ? 'Saving Changes...' : 'Save Changes'}
+                </Text>
+            </TouchableOpacity>
             </View>
         </ScrollView>
     );
@@ -224,6 +242,27 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: 'center',
         color: '#B44E13'
+    },
+    imageContainer: {
+        marginBottom: 15,
+    },
+    imagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
+        backgroundColor: '#ddd'
+    },
+    changeImageButton: {
+        backgroundColor: '#B44E13',
+        padding: 8,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 5
+    },
+    changeImageText: {
+        color: 'white',
+        fontWeight: 'bold'
     },
     label: {
         marginBottom: 5,
@@ -252,6 +291,9 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         fontSize: 16
+    },
+    saveButtonDisabled: {
+        opacity: 0.7
     },
     imagePreview: {
         width: '100%',

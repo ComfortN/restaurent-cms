@@ -7,7 +7,8 @@ import {
   StyleSheet, 
   ScrollView, 
   Alert, 
-  Image
+  Image,
+  Platform
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { createRestaurant } from '../reduc/slices/restaurentSlice';
@@ -26,6 +27,7 @@ const CreateRestaurant = ({ navigation }) => {
     tags: []
   });
   const [image, setImage] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
 
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector(state => state.restaurants);
@@ -63,6 +65,7 @@ const CreateRestaurant = ({ navigation }) => {
   
     if (!result.canceled) {
       setImage(result.assets[0]);
+      setImageBase64(result.assets[0].base64);
     }
   };
 
@@ -88,17 +91,18 @@ const CreateRestaurant = ({ navigation }) => {
             const uriParts = image.uri.split('.');
             const fileType = uriParts[uriParts.length - 1];
             
-            formData.append('image', {
-                uri: image.uri,
-                type: `image/${fileType}`,
-                name: `photo.${fileType}`,
-            });
+          // Create file object
+          formData.append('image', {
+            uri: Platform.OS === 'ios' ? image.uri.replace('file://', '') : image.uri,
+            type: `image/${fileType}`,
+            name: `photo.${fileType}`,
+          });
         }
 
         // Log the form data
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-        }
+        // for (let [key, value] of formData.entries()) {
+        //     console.log(`${key}:`, value);
+        // }
 
         const response = await dispatch(createRestaurant(formData)).unwrap();
         Alert.alert('Success', 'Restaurant created successfully');
@@ -108,6 +112,31 @@ const CreateRestaurant = ({ navigation }) => {
         Alert.alert('Error', error.message || 'Failed to create restaurant');
     }
 };
+
+// Preview component for the restaurant display
+const RestaurantPreview = () => (
+  <View style={styles.previewContainer}>
+    {image && (
+      <Image 
+        source={{ uri: image.uri }} 
+        style={styles.previewImage} 
+        resizeMode="cover"
+      />
+    )}
+    <View style={styles.previewInfo}>
+      <Text style={styles.previewName}>{restaurantData.name || 'Restaurant Name'}</Text>
+      <Text style={styles.previewLocation}>{restaurantData.location || 'Location'}</Text>
+      <Text style={styles.previewCuisine}>{restaurantData.cuisine || 'Cuisine Type'}</Text>
+      {restaurantData.tags.length > 0 && (
+        <View style={styles.tagContainer}>
+          {restaurantData.tags.map((tag, index) => (
+            <Text key={index} style={styles.tag}>#{tag}</Text>
+          ))}
+        </View>
+      )}
+    </View>
+  </View>
+);
 
   return (
     <ScrollView style={styles.container}>
@@ -119,6 +148,9 @@ const CreateRestaurant = ({ navigation }) => {
       </View>
 
       <View style={styles.formContainer}>
+        {/* Preview Section */}
+        <RestaurantPreview />
+
       {/* Image Upload Section */}
       <Text style={styles.label}>Restaurant Image</Text>
         <TouchableOpacity 
@@ -248,6 +280,54 @@ const styles = StyleSheet.create({
   formContainer: {
     padding: 20,
     color: '#B44E13'
+  },
+  previewContainer: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    marginBottom: 20,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+  },
+  previewInfo: {
+    padding: 15,
+  },
+  previewName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#B44E13',
+    marginBottom: 5,
+  },
+  previewLocation: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 3,
+  },
+  previewCuisine: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 10,
+  },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 5,
+  },
+  tag: {
+    backgroundColor: '#F7BF90',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+    marginRight: 5,
+    marginBottom: 5,
+    color: '#B44E13',
   },
   imagePicker: {
     alignItems: 'center',
