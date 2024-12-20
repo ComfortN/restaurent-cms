@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
 const restaurantRoutes = require('./routes/restaurantRoutes.js');
 const reservationRoutes = require('./routes/reservationRoutes.js')
+const reviewsRoutes = require('./routes/feedbackRoutes.js')
 const path = require('path');
 
 dotenv.config();
@@ -54,6 +55,7 @@ initializeSuperAdmin();
 app.use('/api/auth', authRoutes);
 app.use('/api/restaurants', restaurantRoutes);
 app.use('/api/reservations', reservationRoutes)
+app.use('/api/reviews', reviewsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

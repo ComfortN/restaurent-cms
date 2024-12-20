@@ -14,7 +14,17 @@ const restaurantSchema = new mongoose.Schema({
         id: String,          // Firestore document ID
         originalName: String,
         mimetype: String
-      }
+      },
+      averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    totalReviews: {
+        type: Number,
+        default: 0
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Restaurant', restaurantSchema);
