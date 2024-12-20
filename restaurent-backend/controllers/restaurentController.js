@@ -90,30 +90,33 @@ exports.getAllRestaurants = async (req, res) => {
             return res.status(403).json({ message: "Access denied." });
         }
 
-        // let restaurants;
-        // if (req.user.role === 'super_admin') {
-        //     // Super Admin sees all details
-        //     restaurants = await Restaurant.find().populate('owner', 'name email');
-        // } else if (req.user.role === 'user') {
-        //     // Regular user sees limited details
-        //     restaurants = await Restaurant.find().select('name location cuisine');
-        // }
-
         // Fetch restaurants from MongoDB
         let restaurants = await Restaurant.find();
 
         // Fetch image data from Firestore for each restaurant
-        for (let restaurant of restaurants) {
-            if (restaurant.image && restaurant.image.id) {
-                const imageDocRef = doc(db, 'restaurantImages', restaurant.image.id);
-                const imageDoc = await getDoc(imageDocRef);
-                if (imageDoc.exists()) {
-                    restaurant.image = imageDoc.data(); // Attach the Firestore image data
+        const restaurantsWithImages = await Promise.all(restaurants.map(async (restaurant) => {
+            const restaurantObj = restaurant.toObject(); // Convert to plain object
+            
+            if (restaurantObj.image && restaurantObj.image.id) {
+                try {
+                    const imageDocRef = doc(db, 'restaurantImages', restaurantObj.image.id);
+                    const imageDoc = await getDoc(imageDocRef);
+                    
+                    if (imageDoc.exists()) {
+                        const imageData = imageDoc.data();
+                        restaurantObj.image = {
+                            ...restaurantObj.image,
+                            data: imageData.data // This should be your base64 string
+                        };
+                    }
+                } catch (error) {
+                    console.error(`Error fetching image for restaurant ${restaurantObj._id}:`, error);
                 }
             }
-        }
+            return restaurantObj;
+        }));
 
-        res.status(200).json(restaurants);
+        res.status(200).json(restaurantsWithImages);
     } catch (error) {
         console.error("Error fetching restaurants:", error);
         res.status(500).json({ 
