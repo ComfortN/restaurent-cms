@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../reduc/slices/authSlice';
+import { Ionicons } from '@expo/vector-icons';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const dispatch = useDispatch();
   const { isAuthenticated, error, isLoading, role } = useSelector(state => state.auth);
@@ -68,13 +70,25 @@ const LoginScreen = ({ navigation }) => {
         autoCapitalize="none"
       />
       
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity 
+          style={styles.eyeIcon}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons 
+            name={showPassword ? 'eye-outline' : 'eye-off-outline'} 
+            size={24} 
+            color="#B44E13"
+          />
+        </TouchableOpacity>
+      </View>
       
       <TouchableOpacity 
         style={styles.loginButton} 
@@ -111,6 +125,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
     backgroundColor: 'white'
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 15,
+  },
+  passwordInput: {
+    height: 50,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    backgroundColor: 'white',
+    paddingRight: 50, 
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 12,
+    height: '100%',
+    justifyContent: 'center',
   },
   loginButton: {
     backgroundColor: '#B44E13',
