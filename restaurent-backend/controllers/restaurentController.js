@@ -127,6 +127,31 @@ exports.getAllRestaurants = async (req, res) => {
 };
 
 
+// exports.getRestaurantById = async (req, res) => {
+//     try {
+//         const restaurant = await Restaurant.findById(req.params.id).populate('owner', 'name email');
+
+//         if (!restaurant) {
+//             return res.status(404).json({ message: "Restaurant not found" });
+//         }
+
+//         // Restrict access based on role
+//         if (req.user.role === 'restaurant_admin' && 
+//             restaurant.owner.toString() !== req.user.id) {
+//             return res.status(403).json({ message: "Access denied" });
+//         }
+
+//         res.status(200).json(restaurant);
+//     } catch (error) {
+//         console.error("Error fetching restaurant:", error);
+//         res.status(500).json({ 
+//             message: "Server error", 
+//             error: error.message 
+//         });
+//     }
+// };
+
+
 exports.getRestaurantById = async (req, res) => {
     try {
         const restaurant = await Restaurant.findById(req.params.id).populate('owner', 'name email');
@@ -135,12 +160,22 @@ exports.getRestaurantById = async (req, res) => {
             return res.status(404).json({ message: "Restaurant not found" });
         }
 
-        // Restrict access based on role
-        if (req.user.role === 'restaurant_admin' && 
-            restaurant.owner.toString() !== req.user.id) {
-            return res.status(403).json({ message: "Access denied" });
+        // Log the user and restaurant details for debugging
+        console.log('Logged-in User:', req.user);
+        console.log('Restaurant Owner:', restaurant.owner);
+
+        // Allow access if the user is a super_admin
+        if (req.user.role === 'super_admin') {
+            return res.status(200).json(restaurant);
         }
 
+        // Restrict access for restaurant_admin if they don't own the restaurant
+        if (req.user.role === 'restaurant_admin' && 
+            restaurant.owner._id.toString() !== req.user.id) {
+            return res.status(403).json({ message: "Access denied. You do not own this restaurant." });
+        }
+
+        // If the user is a restaurant_admin and owns the restaurant, allow access
         res.status(200).json(restaurant);
     } catch (error) {
         console.error("Error fetching restaurant:", error);
@@ -150,7 +185,6 @@ exports.getRestaurantById = async (req, res) => {
         });
     }
 };
-
 
 exports.updateRestaurant = async (req, res) => {
     try {
