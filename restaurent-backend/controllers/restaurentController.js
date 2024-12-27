@@ -178,7 +178,7 @@ exports.updateRestaurant = async (req, res) => {
         // Update basic fields
         const fieldsToUpdate = [
             'name', 'location', 'cuisine', 'description', 
-            'contactNumber', 'websiteUrl', 'timeSlots', 'openingHours'
+            'contactNumber', 'websiteUrl', 'timeSlots', 'operatingHours'
         ];
         
         fieldsToUpdate.forEach(field => {
