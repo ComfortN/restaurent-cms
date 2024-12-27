@@ -7,11 +7,11 @@ const reservationSchema = new mongoose.Schema(
             ref: 'Restaurant',
             required: true,
         },
-        // userId: {
-        //     type: mongoose.Schema.Types.ObjectId,
-        //     ref: 'User',
-        //     required: true,
-        // },
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
         date: {
             type: Date,
             required: true,
