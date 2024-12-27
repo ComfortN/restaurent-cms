@@ -11,12 +11,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllRestaurants } from '../reduc/slices/restaurentSlice';
 import { logoutUser } from '../reduc/slices/authSlice';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import DashboardAnalytics from '../components/DashboardAnalytics';
+
 
 const SuperAdminDashboard = ({ navigation }) => {
   const dispatch = useDispatch();
-  const { restaurants, isLoading, error } = useSelector(state => state.restaurants);
+  const { restaurants, reservations, isLoading, error } = useSelector(state => state.restaurants);
   const { user } = useSelector(state => state.auth);
+  const { users } = useSelector(state => state.users);
 
+  
   useEffect(() => {
     dispatch(fetchAllRestaurants());
   }, [dispatch]);
@@ -44,6 +48,10 @@ const SuperAdminDashboard = ({ navigation }) => {
     navigation.navigate('CreateRestaurantAdmin');
   };
 
+  const handleManageUsers = () => {
+    navigation.navigate('ManageUsers');
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -55,7 +63,7 @@ const SuperAdminDashboard = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.dashboardContent}>
         <Text style={styles.sectionTitle}>Dashboard Overview</Text>
-        
+        {/* <DashboardAnalytics restaurants={restaurants} reservations={reservations} /> */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <FontAwesome5 name="restaurant" size={30} color="#007bff" />
@@ -69,6 +77,14 @@ const SuperAdminDashboard = ({ navigation }) => {
               {restaurants.filter(r => r.owner).length}
             </Text>
             <Text style={styles.statLabel}>Restaurants with Admin</Text>
+          </View>
+
+          <View style={styles.statBox}>
+            <FontAwesome5 name="users" size={30} color="#dc3545" />
+            <Text style={styles.statNumber}>
+              {users.length}
+            </Text>
+            <Text style={styles.statLabel}>Total Users</Text>
           </View>
         </View>
 
@@ -97,6 +113,14 @@ const SuperAdminDashboard = ({ navigation }) => {
           >
             <FontAwesome5 name="user-plus" size={24} color="white" />
             <Text style={styles.actionButtonText}>Create Restaurant Admin</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={handleManageUsers}
+          >
+            <FontAwesome5 name="users" size={24} color="white" />
+            <Text style={styles.actionButtonText}>Manage Users</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -137,8 +161,10 @@ const styles = StyleSheet.create({
   },
   statsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 20
+    marginBottom: 20,
+    gap: 10,
   },
   statBox: {
     backgroundColor: '#FFE1BB',
