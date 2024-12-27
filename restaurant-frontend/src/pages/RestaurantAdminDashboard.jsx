@@ -5,6 +5,7 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   ScrollView, 
+  ActivityIndicator,
   Alert 
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,6 +17,7 @@ import {
   setSelectedRestaurant, 
   fetchRestaurantReviews 
 } from '../reduc/slices/restaurentSlice';
+import ReservationCalendar from '../components/ReservationCalendar';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
 const RestaurantAdminDashboard = ({ navigation }) => {
@@ -122,7 +124,7 @@ const RestaurantAdminDashboard = ({ navigation }) => {
         </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>Reservation Statistics</Text>
-        
+        <ReservationCalendar reservations={reservations} />
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <FontAwesome5 name="clipboard-list" size={30} color="#28a745" />
