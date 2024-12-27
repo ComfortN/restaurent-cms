@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid phone number!`
         }
     },
+    fcmToken: {
+        type: String,
+        default: null
+    },
     role: { 
         type: String, 
         enum: ['super_admin', 'restaurant_admin', 'user'], 
