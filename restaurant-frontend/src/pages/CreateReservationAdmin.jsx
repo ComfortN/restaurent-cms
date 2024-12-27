@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,109 +11,77 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
-import { createReservation } from '../reduc/slices/reservationSlice';
+import { createReservation, fetchAvailableTimeSlots, clearTimeSlots } from '../reduc/slices/reservationSlice';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 const CreateReservation = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { isLoading } = useSelector(state => state.reservations);
+  const { available: availableSlots, operatingHours } = useSelector(state => state.reservations.timeSlots);
 
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [partySize, setPartySize] = useState('');
   const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState('');
   const [mode, setMode] = useState('date');
   const [show, setShow] = useState(false);
-  const [specialRequests, setSpecialRequests] = useState('');
+
+  useEffect(() => {
+    if (date) {
+      dispatch(fetchAvailableTimeSlots({ 
+        restaurantId: user?.restaurantId?._id, 
+        date: date 
+      }));
+    }
+    return () => dispatch(clearTimeSlots());
+  }, [date, dispatch, user?.restaurantId?._id]);
 
   const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate || (mode === 'date' ? date : time);
-    
-    // Hide picker for non-iOS platforms
+    const currentDate = selectedDate || date;
     if (Platform.OS !== 'ios') {
       setShow(false);
     }
-
-    // Update either date or time based on current mode
-    if (mode === 'date') {
-      setDate(currentDate);
-    } else {
-      setTime(currentDate);
-    }
-  };
-
-  const showMode = (currentMode) => {
-    setShow(true);
-    setMode(currentMode);
-  };
-
-  const showDatepicker = () => {
-    showMode('date');
-  };
-
-  const showTimepicker = () => {
-    showMode('time');
+    setDate(currentDate);
+    setSelectedTime(''); // Reset time when date changes
   };
 
   const handleCreateReservation = () => {
-    // Validate inputs
     if (!customerName.trim()) {
       Alert.alert('Error', 'Please enter customer name');
       return;
     }
-
     if (!customerPhone.trim()) {
       Alert.alert('Error', 'Please enter customer phone number');
       return;
     }
-
     if (!partySize.trim() || isNaN(parseInt(partySize))) {
       Alert.alert('Error', 'Please enter a valid party size');
       return;
     }
-
-    // Additional date validation
-    const now = new Date();
-    if (date < now) {
-      Alert.alert('Error', 'Please select a future date');
+    if (!selectedTime) {
+      Alert.alert('Error', 'Please select a time slot');
       return;
     }
 
-    // Combine date and time
-    const reservationDateTime = new Date(
-      date.getFullYear(), 
-      date.getMonth(), 
-      date.getDate(),
-      time.getHours(),
-      time.getMinutes()
-    );
+    const formattedDate = date.toISOString().split('T')[0];
 
-    // Format the date and time separately
-  const formattedDate = date.toISOString().split('T')[0];
-  const formattedTime = time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-    // Prepare reservation data
     const reservationData = {
       restaurantId: user?.restaurantId?._id,
       date: formattedDate,
-      time: formattedTime,
+      time: selectedTime,
       guests: parseInt(partySize),
       customerName: customerName.trim(),
       customerEmail: customerEmail.trim(),
-      customerPhoneNumber: customerPhone.trim(), // Note: changed from customerPhone to customerPhoneNumber
-      specialRequests: specialRequests.trim() || undefined
+      customerPhoneNumber: customerPhone.trim(),
     };
 
-    // Dispatch create reservation action
     dispatch(createReservation(reservationData))
       .unwrap()
       .then(() => {
-        Alert.alert(
-          'Success', 
-          'Reservation created successfully!',
+        Alert.alert('Success', 'Reservation created successfully!',
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       })
@@ -125,10 +93,7 @@ const CreateReservation = ({ navigation }) => {
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <FontAwesome5 name="arrow-left" size={20} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Create Reservation</Text>
@@ -174,50 +139,57 @@ const CreateReservation = ({ navigation }) => {
           placeholderTextColor="#999"
         />
 
-        {/* Date Selection */}
         <TouchableOpacity 
           style={styles.dateTimeInput} 
-          onPress={showDatepicker}
+          onPress={() => {
+            setMode('date');
+            setShow(true);
+          }}
         >
           <FontAwesome5 name="calendar" size={20} color="#B44E13" />
-          <Text style={styles.dateTimeText}>
-            {date.toLocaleDateString()}
-          </Text>
+          <Text style={styles.dateTimeText}>{date.toLocaleDateString()}</Text>
         </TouchableOpacity>
 
-        {/* Time Selection */}
-        <TouchableOpacity 
-          style={styles.dateTimeInput} 
-          onPress={showTimepicker}
-        >
-          <FontAwesome5 name="clock" size={20} color="#B44E13" />
-          <Text style={styles.dateTimeText}>
-            {time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-          </Text>
-        </TouchableOpacity>
-
-        {/* DateTimePicker */}
         {show && (
           <DateTimePicker
             testID="dateTimePicker"
-            value={mode === 'date' ? date : time}
+            value={date}
             mode={mode}
             is24Hour={true}
             display="default"
             onChange={onChange}
-            minimumDate={new Date()} // Prevent selecting past dates
+            minimumDate={new Date()}
           />
         )}
 
-        <TextInput
-          style={styles.multilineInput}
-          placeholder="Special Requests (Optional)"
-          value={specialRequests}
-          onChangeText={setSpecialRequests}
-          multiline
-          numberOfLines={4}
-          placeholderTextColor="#999"
-        />
+        <Text style={styles.sectionTitle}>Available Time Slots</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.timeSlotContainer}>
+            {availableSlots.map((slot) => (
+              <TouchableOpacity
+                key={slot.time}
+                style={[
+                  styles.timeSlot,
+                  selectedTime === slot.time && styles.selectedTimeSlot,
+                  slot.available === 0 && styles.disabledTimeSlot
+                ]}
+                onPress={() => setSelectedTime(slot.time)}
+                disabled={slot.available === 0}
+              >
+                <Text style={[
+                  styles.timeSlotText,
+                  selectedTime === slot.time && styles.selectedTimeSlotText,
+                  slot.available === 0 && styles.disabledTimeSlotText
+                ]}>
+                  {slot.time}
+                </Text>
+                <Text style={styles.availabilityText}>
+                  {slot.available} available
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
         <TouchableOpacity 
           style={styles.createButton} 
@@ -233,6 +205,7 @@ const CreateReservation = ({ navigation }) => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
         container: {
@@ -288,6 +261,42 @@ const styles = StyleSheet.create({
           fontSize: 16,
           height: 100,
           textAlignVertical: 'top'
+        },
+        timeSlotContainer: {
+          flexDirection: 'row',
+          paddingVertical: 10,
+        },
+        timeSlot: {
+          padding: 10,
+          marginRight: 10,
+          backgroundColor: 'white',
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: '#B44E13',
+          minWidth: 100,
+          alignItems: 'center',
+        },
+        selectedTimeSlot: {
+          backgroundColor: '#B44E13',
+        },
+        disabledTimeSlot: {
+          backgroundColor: '#f0f0f0',
+          borderColor: '#ccc',
+        },
+        timeSlotText: {
+          color: '#B44E13',
+          fontWeight: '500',
+        },
+        selectedTimeSlotText: {
+          color: 'white',
+        },
+        disabledTimeSlotText: {
+          color: '#999',
+        },
+        availabilityText: {
+          fontSize: 12,
+          color: '#666',
+          marginTop: 4,
         },
         dateTimeInput: {
           backgroundColor: 'white',
