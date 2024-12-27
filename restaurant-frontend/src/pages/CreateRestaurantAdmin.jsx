@@ -176,7 +176,7 @@ const CreateRestaurantAdmin = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '' 
+    backgroundColor: '#F7BF90' 
   },
   header: {
     backgroundColor: '#B44E13',

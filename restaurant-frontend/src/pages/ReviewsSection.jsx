@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRestaurantReviews } from '../reduc/slices/restaurentSlice';
 import { FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 
-const ReviewsSection = () => {
+
+const ReviewsSection = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { reviews, isLoading, selectedRestaurant } = useSelector(state => state.restaurants);
@@ -99,7 +101,7 @@ const ReviewsSection = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading reviews...</Text>
+        <ActivityIndicator size="large" color="#B44E13" />
       </View>
     );
   }
@@ -117,25 +119,23 @@ const ReviewsSection = () => {
   return (
     <View style={styles.container}>
       <View style={styles.headerWithNav}>
-        <TouchableOpacity 
-          onPress={handleBackPress}
-          style={styles.backButton}
-        >
-          <FontAwesome name="arrow-left" size={24} color="#9A3412" />
-        </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <FontAwesome5 name="arrow-left" size={20} color="white" />
+      </TouchableOpacity>
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>
             Customer Reviews
           </Text>
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsText}>
-              Total Reviews: {selectedRestaurant?.totalReviews || 0}
-            </Text>
-            <Text style={styles.statsText}>
-              Average Rating: {selectedRestaurant?.averageRating?.toFixed(1) || 'N/A'}
-            </Text>
-          </View>
+          
         </View>
+      </View>
+      <View style={styles.statsContainer}>
+        <Text style={styles.statsText}>
+          Total Reviews: {selectedRestaurant?.totalReviews || 0}
+        </Text>
+        <Text style={styles.statsText}>
+          Average Rating: {selectedRestaurant?.averageRating?.toFixed(1) || 'N/A'}
+        </Text>
       </View>
 
       <FlatList
@@ -155,21 +155,18 @@ const ReviewsSection = () => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 16
+    flex: 1,
+    backgroundColor: '#F7BF90'
   },
   headerWithNav: {
+    backgroundColor: '#B44E13',
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    marginBottom: 16,
     alignItems: 'center',
     padding: 15,
     paddingTop: 40
   },
   backButton: {
-    padding: 8,
-    marginRight: 12,
-    marginTop: 4
+    marginRight: 15
   },
   headerContainer: {
     flex: 1
@@ -177,7 +174,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#9A3412',
+    color: 'white',
     marginBottom: 8
   },
   statsContainer: {
@@ -185,7 +182,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    marginHorizontal: 15,
+    margin: 10
   },
   statsText: {
     color: '#9A3412',
@@ -239,7 +238,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
+    margin: 15,
     paddingHorizontal: 8
   },
   paginationButton: {
@@ -259,8 +258,11 @@ const styles = StyleSheet.create({
     color: '#4B5563'
   },
   loadingContainer: {
-    padding: 16,
-    alignItems: 'center'
+    flex: 1,
+    backgroundColor: '#F7BF90',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white'
   },
   errorContainer: {
     padding: 16,

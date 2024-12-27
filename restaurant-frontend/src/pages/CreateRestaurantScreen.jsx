@@ -23,14 +23,29 @@ const CreateRestaurant = ({ navigation }) => {
     description: '',
     contactNumber: '',
     websiteUrl: '',
-    openingHours: '',
+    operatingHours: {
+      sunday: { open: '', close: '' },
+      monday: { open: '', close: '' },
+      tuesday: { open: '', close: '' },
+      wednesday: { open: '', close: '' },
+      thursday: { open: '', close: '' },
+      friday: { open: '', close: '' },
+      saturday: { open: '', close: '' }
+    },
+    timeSlots: [],
     tags: []
   });
   const [image, setImage] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
+  const [timeSlotInput, setTimeSlotInput] = useState({
+    time: '',
+    capacity: ''
+  });
 
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector(state => state.restaurants);
+
+
 
   const handleInputChange = (field, value) => {
     setRestaurantData(prev => ({
@@ -70,6 +85,51 @@ const CreateRestaurant = ({ navigation }) => {
   };
 
 
+  const handleOperatingHoursChange = (day, field, value) => {
+    setRestaurantData(prev => ({
+      ...prev,
+      operatingHours: {
+        ...prev.operatingHours,
+        [day]: {
+          ...prev.operatingHours[day],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleTimeSlotChange = (field, value) => {
+    setTimeSlotInput(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const addTimeSlot = () => {
+    if (timeSlotInput.time && timeSlotInput.capacity) {
+      setRestaurantData(prev => ({
+        ...prev,
+        timeSlots: [
+          ...prev.timeSlots,
+          {
+            time: timeSlotInput.time,
+            capacity: parseInt(timeSlotInput.capacity, 10)
+          }
+        ]
+      }));
+      setTimeSlotInput({ time: '', capacity: '' });
+    }
+  };
+
+  const removeTimeSlot = (index) => {
+    setRestaurantData(prev => ({
+      ...prev,
+      timeSlots: prev.timeSlots.filter((_, i) => i !== index)
+    }));
+  };
+
+
+
   const handleCreateRestaurant = async() => {
     try {
         const formData = new FormData();
@@ -84,6 +144,8 @@ const CreateRestaurant = ({ navigation }) => {
         formData.append('contactNumber', restaurantData.contactNumber || '');
         formData.append('websiteUrl', restaurantData.websiteUrl || '');
         formData.append('openingHours', restaurantData.openingHours || '');
+        formData.append('operatingHours', JSON.stringify(restaurantData.operatingHours));
+        formData.append('timeSlots', JSON.stringify(restaurantData.timeSlots));
         formData.append('tags', JSON.stringify(restaurantData.tags || []));
 
         // Add image if selected
@@ -223,13 +285,55 @@ const RestaurantPreview = () => (
           keyboardType="url"
         />
 
-        <Text style={styles.label}>Opening Hours</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter opening hours"
-          value={restaurantData.openingHours}
-          onChangeText={(value) => handleInputChange('openingHours', value)}
-        />
+        {/* Operating Hours */}
+        <Text style={styles.label}>Operating Hours</Text>
+        {Object.entries(restaurantData.operatingHours).map(([day, hours]) => (
+          <View key={day} style={styles.operatingHoursContainer}>
+            <Text style={styles.operatingHoursDay}>{day.charAt(0).toUpperCase() + day.slice(1)}</Text>
+            <TextInput
+              style={styles.operatingHoursInput}
+              placeholder="Open (e.g., 10:00)"
+              value={hours.open}
+              onChangeText={(value) => handleOperatingHoursChange(day, 'open', value)}
+            />
+            <TextInput
+              style={styles.operatingHoursInput}
+              placeholder="Close (e.g., 22:00)"
+              value={hours.close}
+              onChangeText={(value) => handleOperatingHoursChange(day, 'close', value)}
+            />
+          </View>
+        ))}
+
+        {/* Time Slots */}
+        <Text style={styles.label}>Time Slots</Text>
+        <View style={styles.timeSlotInputContainer}>
+          <TextInput
+            style={styles.timeSlotInput}
+            placeholder="Time (e.g., 10:00 AM)"
+            value={timeSlotInput.time}
+            onChangeText={(value) => handleTimeSlotChange('time', value)}
+          />
+          <TextInput
+            style={styles.timeSlotInput}
+            placeholder="Capacity"
+            value={timeSlotInput.capacity}
+            onChangeText={(value) => handleTimeSlotChange('capacity', value)}
+            keyboardType="numeric"
+          />
+          <TouchableOpacity style={styles.addTimeSlotButton} onPress={addTimeSlot}>
+            <Text style={styles.addTimeSlotButtonText}>Add</Text>
+          </TouchableOpacity>
+        </View>
+
+        {restaurantData.timeSlots.map((slot, index) => (
+          <View key={index} style={styles.timeSlotItem}>
+            <Text style={styles.timeSlotText}>{slot.time} (Capacity: {slot.capacity})</Text>
+            <TouchableOpacity onPress={() => removeTimeSlot(index)}>
+              <FontAwesome5 name="times" size={16} color="red" />
+            </TouchableOpacity>
+          </View>
+        ))}
 
         <Text style={styles.label}>Tags (comma-separated)</Text>
         <TextInput
@@ -314,6 +418,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginBottom: 10,
+  },
+  operatingHoursContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  operatingHoursDay: {
+    width: 80,
+    fontWeight: 'bold',
+    color: '#B44E13',
+  },
+  operatingHoursInput: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 10,
+  },
+  timeSlotInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  timeSlotInput: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 10,
+  },
+  addTimeSlotButton: {
+    backgroundColor: '#B44E13',
+    padding: 10,
+    borderRadius: 8,
+  },
+  addTimeSlotButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  timeSlotItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+  },
+  timeSlotText: {
+    color: '#B44E13',
   },
   tagContainer: {
     flexDirection: 'row',

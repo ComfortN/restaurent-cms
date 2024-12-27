@@ -1,70 +1,154 @@
-# Getting Started with Create React App
+# Restaurant Management System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive solution for managing restaurants, reservations, and reviews with role-based access control. The system consists of a React Native frontend application and a Node.js backend API.
 
-## Available Scripts
+## Live Server Links
 
-In the project directory, you can run:
+- Backend API: https://restaurent-cms.onrender.com/api
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Team Members
+- **Comfort Ngwenya** - nqobilecomfyngwenya@gmail.com
+- **Sibusiso Khoza** - sibusisok59@gmail.com
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
+## Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### User Roles
+- **Super Admin:** Full system access, manage restaurants and user roles
+- **Restaurant Admin:** Manage individual restaurant operations
+- **Regular Users:** Browse restaurants, make reservations, write reviews
 
-### `npm run build`
+### Key Functionality
+- Role-specific dashboards with real-time statistics
+- Comprehensive reservation management system
+- Customer review and rating system
+- Image upload and management
+- Secure payment integration via Paystack
+- JWT-based authentication
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Technical Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Frontend
+- **Framework:** React Native
+- **State Management:** Redux
+- **UI Components:** Custom styled components, FontAwesome5, MaterialIcons
+- **Development:** Expo
+- **Additional Features:** Native DateTimePicker, Image Picker
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Backend
+- **Framework:** Node.js with Express
+- **Database:** MongoDB
+- **Authentication:** JWT (JSON Web Tokens)
+- **File Storage:** Firebase (Firestore)
+- **Payment:** Paystack Integration
 
-### `npm run eject`
+## Installation
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Frontend Setup
+1. Clone the repository:
+```bash
+git clone https://github.com/ComfortN/restaurent-cms.git
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+2. Navigate to frontend directory:
+```bash
+cd restaurent-cms/restaurant-frontend
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+3. Install dependencies:
+```bash
+npm install
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+4. Start development server:
+```bash
+npm start
+# or
+expo start
+```
 
-## Learn More
+### Backend Setup
+1. Navigate to backend directory:
+```bash
+cd restaurent-cms/restaurent-backend
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+2. Install dependencies:
+```bash
+npm install
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+3. Create `.env` file in root directory with following variables:
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+PAYSTACK_SECRET_KEY=your_paystack_secret_key
+FIREBASE_API_KEY=your_firebase_api_key
+FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+FIREBASE_APP_ID=your_firebase_app_id
+```
 
-### Code Splitting
+4. Start the server:
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## API Endpoints
 
-### Analyzing the Bundle Size
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Restaurants
+- `POST /api/restaurants` - Create restaurant (Super Admin only)
+- `GET /api/restaurants` - Get all restaurants
+- `GET /api/restaurants/:id` - Get restaurant by ID
+- `PUT /api/restaurants/:id` - Update restaurant
+- `DELETE /api/restaurants/:id` - Delete restaurant (Super Admin only)
 
-### Making a Progressive Web App
+### Reservations
+- `POST /api/reservations` - Create reservation
+- `GET /api/reservations/user` - Get user's reservations
+- `PUT /api/reservations/:reservationId` - Update reservation
+- `DELETE /api/reservations/:reservationId` - Cancel reservation
+- `POST /api/reservations/payment` - Initialize payment
+- `POST /api/reservations/payment/confirm` - Confirm payment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Reviews
+- `POST /api/reviews` - Create review
+- `PUT /api/reviews/:reviewId` - Update review
+- `DELETE /api/reviews/:reviewId` - Delete review
+- `GET /api/reviews/restaurant/:restaurantId` - Get restaurant reviews
 
-### Advanced Configuration
+## Security Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Password hashing using bcrypt
+- JWT-based authentication
+- Role-based access control
+- Secure file handling with Firebase
+- Input validation and sanitization
 
-### Deployment
+## Development Guidelines
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Frontend
+- Use functional components with hooks
+- Implement proper error handling
+- Follow React Native best practices
+- Maintain consistent styling patterns
 
-### `npm run build` fails to minify
+### Backend
+- Implement proper input validation and sanitization
+- Follow RESTful API design principles
+- Maintain role-based access control
+- Handle errors gracefully
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Documentation Link
+
+https://docs.google.com/document/d/1TjEJnwTE4lGEPFDf5h9vjTBDBPfSCJp3ldqbYRiP5oQ/edit?usp=sharing

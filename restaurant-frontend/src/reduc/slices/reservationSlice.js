@@ -103,16 +103,65 @@ export const cancelReservation = createAsyncThunk(
   }
 );
 
+
+    // New thunk for fetching available time slots
+    export const fetchAvailableTimeSlots = createAsyncThunk(
+      'restaurants/fetchTimeSlots',
+      async ({ restaurantId, date }, { rejectWithValue }) => {
+        try {
+          const token = await AsyncStorage.getItem('userToken');
+          const formattedDate = date.toISOString().split('T')[0];
+          
+          const response = await axios.get(
+            `${API_URL}/reservations/availability/${restaurantId}/${formattedDate}`,
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
+          
+          // Filter out time slots with no availability
+          const availableSlots = response.data.availability.filter(slot => slot.available > 0);
+          
+          return {
+            availableSlots,
+            operatingHours: response.data.operatingHours,
+            dayOfWeek: response.data.dayOfWeek
+          };
+        } catch (error) {
+          return rejectWithValue(
+            error.response?.data?.message || 'Failed to fetch available time slots'
+          );
+        }
+      }
+    );
+    
+
 const reservationSlice = createSlice({
   name: 'reservations',
   initialState: {
     reservations: [],
+    timeSlots: {
+      available: [],
+      operatingHours: null,
+      dayOfWeek: null,
+      isLoading: false,
+      error: null
+    },
     isLoading: false,
     error: null
   },
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    clearTimeSlots: (state) => {
+      state.timeSlots = {
+        available: [],
+        operatingHours: null,
+        dayOfWeek: null,
+        isLoading: false,
+        error: null
+      };
     }
   },
   extraReducers: (builder) => {
@@ -190,8 +239,25 @@ const reservationSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     });
+
+    // Add new cases for time slots
+        builder.addCase(fetchAvailableTimeSlots.pending, (state) => {
+          state.timeSlots.isLoading = true;
+          state.timeSlots.error = null;
+        });
+        builder.addCase(fetchAvailableTimeSlots.fulfilled, (state, action) => {
+          state.timeSlots.isLoading = false;
+          state.timeSlots.available = action.payload.availableSlots;
+          state.timeSlots.operatingHours = action.payload.operatingHours;
+          state.timeSlots.dayOfWeek = action.payload.dayOfWeek;
+        });
+        builder.addCase(fetchAvailableTimeSlots.rejected, (state, action) => {
+          state.timeSlots.isLoading = false;
+          state.timeSlots.error = action.payload;
+          state.timeSlots.available = [];
+        });
   }
 });
 
-export const { clearError } = reservationSlice.actions;
+export const { clearError, clearTimeSlots } = reservationSlice.actions;
 export default reservationSlice.reducer;
