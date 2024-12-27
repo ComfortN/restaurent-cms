@@ -2,6 +2,16 @@
 
 A comprehensive solution for managing restaurants, reservations, and reviews with role-based access control. The system consists of a React Native frontend application and a Node.js backend API.
 
+## Live Server Links
+
+- Backend API: https://restaurent-cms.onrender.com/api
+
+
+## Team Members
+- **Comfort Ngwenya** - nqobilecomfyngwenya@gmail.com
+- **Sibusiso Khoza** - sibusisok59@gmail.com
+
+
 ## Features
 
 ### User Roles
