@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const User = require('../models/User');
+const Reservation = require('../models/Reservation')
 
 // Initialize Firebase Admin
 admin.initializeApp({
@@ -13,6 +15,9 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASSWORD
+  },
+  tls: {
+    rejectUnauthorized: false // Disables certificate validation
   }
 });
 
@@ -72,22 +77,24 @@ const sendPushNotification = async (userId, title, body) => {
 };
 
 // Send email
-const sendEmail = async (to, template, data) => {
+const sendEmail = async (to, template, data, fromEmail) => {
   try {
     const emailContent = emailTemplates[template](data);
-    
+
     await transporter.sendMail({
-      from: process.env.SMTP_FROM_EMAIL,
+      from: fromEmail, // Use the admin's email here
       to,
       subject: emailContent.subject,
-      html: emailContent.html
+      html: emailContent.html,
     });
 
-    console.log('Email sent successfully');
+    console.log('Email sent successfully from:', fromEmail);
   } catch (error) {
     console.error('Error sending email:', error);
   }
 };
+
+
 
 module.exports = {
   sendPushNotification,
