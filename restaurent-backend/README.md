@@ -35,6 +35,16 @@ A comprehensive backend API for managing restaurants, reservations, reviews, and
 - Firebase account (for image storage)
 - Paystack account (for payments)
 
+## Super Admin Access
+
+The system automatically creates a super admin account on first run with the following credentials:
+
+```
+Email: superadmin@example.com
+Password: defaultSuperAdminPassword123
+```
+
+
 ## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
@@ -134,4 +144,3 @@ The API uses standard HTTP status codes and returns error messages in the follow
 - Role-based access control
 - Input validation and sanitization
 - Secure file upload handling
-
